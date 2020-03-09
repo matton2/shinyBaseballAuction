@@ -41,14 +41,14 @@ set.seed(1)
 # players$teamDrafted <- NA
 # players$auctionPrice <- NA
 # players$positionDrafted <- NA
-players <- read_csv('test')
+players <- read_csv('2019Keepers.csv')
 arrange(players, Name)
 
 teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Marc', 'Pat', 'Brendan', 'David')
 position <- c('C', '1B', '2B', 'SS', '3B', 'CI', 'MI', 'OF', 'U', 'SP', 'RP')
 
 ui <- dashboardPage(
-  dashboardHeader(title = 'Fantasy Baseball 2017'),
+  dashboardHeader(title = 'Fantasy Baseball 2019'),
   dashboardSidebar(),
   dashboardBody(
     fluidRow(
@@ -101,15 +101,20 @@ ui <- dashboardPage(
         tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
       )
     ),
-    fluidRow(
-      plotOutput('heat')
-    ),
+    # fluidRow(
+    #   plotOutput('heat')
+    # ),
     fluidRow(
       title = 'Compiled Team Stats:',
       tableOutput('summaryTable')
     ),
     fluidRow(
-      downloadButton('downloadData', 'Download Rosters')
+      downloadButton('downloadData', 'Download Rosters'),
+      downloadButton('downloadTeamData', "Download Completed Rosters"),
+      box(
+        title = "Input Selection",
+        uiOutput('removeInput'),
+        actionButton('remove', label = 'Remove From Team'))
     )
   )
 )
@@ -158,6 +163,26 @@ server <- function(input, output, session) {
     rv$p %>% 
       filter(Name == searchPlayer()) %>% 
       select(Name, POS, H, HR, OBP, R, RBI, SB, ERA, `K/9`, SV, W, WHIP, Dollars)
+  })
+  
+  remove_player <- reactive({input$remove_select})
+  
+  output$removeInput <- renderUI({
+    drafted <- rv$p %>% 
+      filter(!is.na(teamDrafted)) %>% 
+      arrange(Name)
+    selectInput("remove_select", label = "Player Selection:", choices = drafted$Name, selected = 'none')
+  })
+  
+  observeEvent(input$remove, {
+    thedf <- rv$p %>% 
+      mutate(teamDrafted = ifelse(!is.na(teamDrafted) & Name == remove_player(), 
+                                  NA, teamDrafted)) %>% 
+      mutate(auctionPrice = ifelse(!is.na(auctionPrice) & Name == remove_player(), 
+                                   NA, auctionPrice)) %>% 
+      mutate(positionDrafted = ifelse(!is.na(positionDrafted) & Name == remove_player(), 
+                                      NA, positionDrafted))
+    rv$p <- thedf
   })
   
   
@@ -514,6 +539,17 @@ server <- function(input, output, session) {
     
     content = function(file) {
       write.csv(rv$p, file)
+    }
+  )
+  
+  output$downloadTeamData <- downloadHandler(
+    filename = function() {
+      paste("players_drafted", Sys.Date(), ".csv", sep="")
+    },
+    
+    content = function(file) {
+      drafted <- filter(rv$p, !is.na(teamDrafted))
+      write.csv(drafted, file)
     }
   )
   

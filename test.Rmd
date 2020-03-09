@@ -1,0 +1,91 @@
+---
+title: "Fantasy Baseball Draft App"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    socal: menu
+runtime: shiny
+---
+  
+
+```{r global, include = FALSE, echo=FALSE}
+library(tidyverse)
+set.seed(1)
+
+data <- read_csv('FanGraphs Leaderboard.csv')
+data$teamDrafted <- NA
+data$auctionPrice <- NA
+data$positionDrafted <- NA
+arrange(data, Name)
+
+teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Ron', 'Marc', 'Pat', 'Brendan', 'David')
+position <- c('C', '1B', '2B', 'SS', '3B', 'OF', 'SP', 'RP', 'U', 'CI', 'MI')
+
+notDrafted <- data %>% 
+  filter(is.na(teamDrafted)) %>% 
+  arrange(Name)
+
+
+
+```
+
+Page 1
+=================================================================================
+
+Column {.sidebar}
+---------------------------------------------------------------------------------
+
+Column for inputing selected players and auction prices
+
+```{r}
+selectInput("p_select", label = "Player Selection:", choices = notDrafted$Name, selected = 'none')
+
+numericInput('price', "Auction Price:", value = 0.50, min = 0.50, step = 0.25)
+
+radioButtons('team', label = 'Team Drated', choices = teams)
+
+radioButtons('pos', label = 'Select Positon', choices = position)
+
+actionButton('post', label = 'Post to Team')
+
+
+
+```
+
+
+```{r}
+
+drafted_player <- reactive({input$p_select})
+drafted_value <- reactive({input$price})
+drafted_team <- reactive({input$team})
+drafted_position <- reactive({input$pos})
+
+
+postToTeam <- function(data, player, value, team, position) {
+  data %>% 
+    mutate(teamDrafted = ifelse(Name == player, team, NA)) %>% 
+    mutate(auctionPrice = ifelse(Name == player, value, NA)) %>% 
+    mutate(positionDrafted = ifelse(Name == player, position, NA))
+}
+
+
+observeEvent(input$post, {
+  postToTeam(data, drafted_player(), drafted_value(), drafted_team(), drafted_position())
+})
+
+
+```
+
+
+
+Column {data-width = 300}
+----------------------------------------------------------------------
+
+```{r}
+renderTable({
+  data %>% 
+    filter(teamDrafted == 'Matt') %>% 
+    select(Name, positionDrafted, auctionPrice)
+})
+
+```

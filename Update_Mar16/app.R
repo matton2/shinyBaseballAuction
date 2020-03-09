@@ -4,51 +4,64 @@ library(shinydashboard)
 library(plyr)
 library(tidyverse)
 library(scales)
-set.seed(1)
+set.seed(2)
 
-# batters <- read_csv('FanGraphs Leaderboard.csv')
-# batters <- batters %>% 
-#   filter(G > 25) %>%
-#   select(Name, H, HR, OBP, R, RBI, SB, AB, BB, HBP, PA)
-# batterCount <- nrow(batters)
-# batters$batterIndex <- c(1:batterCount)
-# pitchers <- read_csv('FanGraphs Leaderboard pitchers.csv')
-# pitchers <- pitchers %>% 
-#   filter(G > 5) %>% 
-#   rename(H.pitcher = H) %>%
-#   rename(BB.pitcher = BB) %>% 
-#   select(Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
-# pitcherCount <- nrow(pitchers)
-# pitchers$pitcherIndex <- c(1:pitcherCount)
-# batterNames <- select(batters, Name)
-# pitcherNames <- select(pitchers, Name)
-# all_names <- rbind(batterNames, pitcherNames)
-# players <- full_join(all_names, batters, by = c("Name", "Name"))
-# players <- full_join(players, pitchers, by = c("Name", "Name")) 
-# batterAuction <- read_csv('battersAuctionValue.csv')
-# batterAuction <- batterAuction %>% 
-#   select(PlayerName, POS, Dollars) %>% 
-#   separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
-#   mutate(Dollars = as.numeric(Dollars))
-# pitcherAuction <- read_csv('pitcherAuctionValue.csv')
-# pitcherAuction <- pitcherAuction %>% 
-#   select(PlayerName, POS, Dollars) %>% 
-#   separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
-#   mutate(Dollars = as.numeric(Dollars))
-# allAuction <- rbind(batterAuction, pitcherAuction)
-# players <- full_join(players, allAuction, by = c('Name' = 'PlayerName')) %>% 
-#   select(Name, POS, everything())
-# players$teamDrafted <- NA
-# players$auctionPrice <- NA
-# players$positionDrafted <- NA
-players <- read_csv('test')
+batters <- read_csv('Steamer_B_600_mar.csv')    #read batters into data frame
+batters <- batters %>% 
+  filter(G > 25) %>%
+  mutate(batterIndex = row_number()) %>% 
+  filter(batterIndex <= 400) %>% 
+  select(Name, H, HR, OBP, R, RBI, SB, AB, BB, HBP, PA, batterIndex)   #select columns needed
+
+pitchers <- read_csv('Steamer_P_600_mar.csv')
+pitchers <- pitchers %>% 
+  filter(G > 5) %>% 
+  rename(H.pitcher = H) %>%
+  rename(BB.pitcher = BB) %>%
+  mutate(pitcherIndex = row_number()) %>% 
+  filter(pitcherIndex <= 200) %>% 
+  select(Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
+
+batterNames <- select(batters, Name)
+pitcherNames <- select(pitchers, Name)
+all_names <- rbind(batterNames, pitcherNames)
+
+players <- full_join(all_names, batters, by = c("Name", "Name"))
+players <- full_join(players, pitchers, by = c("Name", "Name")) 
+
+batterAuction <- read_csv('battersAuctionValue.csv')
+batterAuction <- batterAuction %>% 
+  mutate(rowIndex = row_number()) %>% 
+  filter(rowIndex <= 400) %>% 
+  select(PlayerName, POS, Dollars) %>% 
+  separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
+  mutate(Dollars = as.numeric(Dollars)) %>% 
+  mutate(Dollars = ifelse(is.na(Dollars), 0.5, Dollars))
+
+pitcherAuction <- read_csv('pitcherAuctionValue.csv')
+pitcherAuction <- pitcherAuction %>% 
+  mutate(rowIndex = row_number()) %>% 
+  filter(rowIndex <= 300) %>% 
+  filter(!grepl('Rami', PlayerName)) %>% 
+  select(PlayerName, POS, Dollars) %>% 
+  separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
+  mutate(Dollars = as.numeric(Dollars)) %>% 
+  mutate(Dollars = ifelse(is.na(Dollars), 0.5, Dollars)) 
+
+allAuction <- rbind(batterAuction, pitcherAuction)
+
+players <- left_join(players, allAuction, by = c('Name' = 'PlayerName')) %>% #changed from full to left
+  select(Name, POS, everything())
+players$teamDrafted <- NA
+players$auctionPrice <- NA
+players$positionDrafted <- NA
 arrange(players, Name)
 
-teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Marc', 'Pat', 'Brendan', 'David')
+teams <- c('Matt', 'Fish', 'Jay', 'Kid', 'Adam', 'Sherm', 'RonT', 'Marc', 'Pat', 'Brendan', 'David')
 position <- c('C', '1B', '2B', 'SS', '3B', 'CI', 'MI', 'OF', 'U', 'SP', 'RP')
 
 ui <- dashboardPage(
-  dashboardHeader(title = 'Fantasy Baseball 2017'),
+  dashboardHeader(title = 'Fantasy Baseball 2018'),
   dashboardSidebar(),
   dashboardBody(
     fluidRow(
@@ -60,12 +73,13 @@ ui <- dashboardPage(
         radioButtons('pos', label = 'Select Positon', choices = position),
         actionButton('post', label = 'Post to Team')),
       tabBox(
-        tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
         tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
+        tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
         tabPanel('Jay', textOutput('jayTitle'),tableOutput('jayTable'), textOutput('jayLine')),
         tabPanel('Kid', textOutput('kidTitle'),tableOutput('kidTable'), textOutput('kidLine')),
         tabPanel('Fish', textOutput('fishTitle'),tableOutput('fishTable'), textOutput('fishLine')),
         tabPanel('Sherm', textOutput('shermTitle'),tableOutput('shermTable'), textOutput('shermLine')),
+        tabPanel('RonT', textOutput('ronTitle'),tableOutput('ronTable'), textOutput('ronLine')),
         tabPanel('Marc', textOutput('marcTitle'),tableOutput('marcTable'), textOutput('marcLine')),
         tabPanel('Pat', textOutput('patTitle'),tableOutput('patTable'), textOutput('patLine')),
         tabPanel('Bren', textOutput('brenTitle'),tableOutput('brenTable'), textOutput('brenLine')),
@@ -109,7 +123,12 @@ ui <- dashboardPage(
       tableOutput('summaryTable')
     ),
     fluidRow(
-      downloadButton('downloadData', 'Download Rosters')
+      downloadButton('downloadData', 'Download All Players'),
+      downloadButton('downloadTeamData', "Download Completed Rosters"),
+      box(
+        title = "Input Selection",
+        uiOutput('removeInput'),
+        actionButton('remove', label = 'Remove From Team'))
     )
   )
 )
@@ -145,6 +164,26 @@ server <- function(input, output, session) {
     selectInput("p_select", label = "Player Selection:", choices = notDrafted$Name, selected = 'none')
   })
   
+  remove_player <- reactive({input$remove_select})
+  
+  output$removeInput <- renderUI({
+    drafted <- rv$p %>% 
+      filter(!is.na(teamDrafted)) %>% 
+      arrange(Name)
+    selectInput("remove_select", label = "Player Selection:", choices = drafted$Name, selected = 'none')
+  })
+  
+  observeEvent(input$remove, {
+    thedf <- rv$p %>% 
+      mutate(teamDrafted = ifelse(!is.na(teamDrafted) & Name == remove_player(), 
+                                  NA, teamDrafted)) %>% 
+      mutate(auctionPrice = ifelse(!is.na(auctionPrice) & Name == remove_player(), 
+                                   NA, auctionPrice)) %>% 
+      mutate(positionDrafted = ifelse(!is.na(positionDrafted) & Name == remove_player(), 
+                                      NA, positionDrafted))
+    rv$p <- thedf
+  })
+  
   output$searchInput <- renderUI({
     notDrafted <- rv$p %>% 
       filter(is.na(teamDrafted)) %>% 
@@ -157,7 +196,14 @@ server <- function(input, output, session) {
   output$playerTable <- renderTable({
     rv$p %>% 
       filter(Name == searchPlayer()) %>% 
-      select(Name, POS, H, HR, OBP, R, RBI, SB, ERA, `K/9`, SV, W, WHIP, Dollars)
+      # case_when(
+      #   (POS == 'SP'|'RP') ~ select(Name, POS, ERA, `K/9`, SV, W, WHIP, pitcherIndex, Dollars),
+      #   (POS != 'SP'|'RP') ~ select(Name, POS, H, HR, OBP, R, RBI, SB, batterIndex, Dollars)
+      # )
+      # # {ifelse(('SP'|'RP' %in% POS), 
+      # #   select(Name, POS, ERA, `K/9`, SV, W, WHIP, pitcherIndex, Dollars), 
+      # #   select(Name, POS, H, HR, OBP, R, RBI, SB, batterIndex)) }
+      select(Name, POS, H, HR, OBP, R, RBI, SB, batterIndex, ERA, `K/9`, SV, W, WHIP, pitcherIndex, Dollars)
   })
   
   
@@ -182,6 +228,9 @@ server <- function(input, output, session) {
   })
   output$shermTitle <- renderText({
     outTitle('Sherm')
+  })
+  output$ronTitle <- renderText({
+    outTitle("Ron")
   })
   output$marcTitle <- renderText({
     outTitle('Marc')
@@ -222,6 +271,9 @@ server <- function(input, output, session) {
   })
   output$shermTable <- renderTable({
     outTable('Sherm')
+  })
+  output$ronTable <- renderTable({
+    outTable('Ron')
   })
   output$marcTable <- renderTable({
     outTable('Marc')
@@ -271,6 +323,9 @@ server <- function(input, output, session) {
   })
   output$shermLine <- renderText({
     outLine('Sherm')
+  })
+  output$ronLine <- renderText({
+    outLine("Ron")
   })
   output$marcLine <- renderText({
     outLine('Marc')
@@ -476,27 +531,27 @@ server <- function(input, output, session) {
                 WHIP = (sum(H.pitcher, na.rm = TRUE) + sum(BB.pitcher, na.rm = TRUE))/sum(IP, na.rm=TRUE),
                 Value = sum(value, na.rm= TRUE)) %>% 
       arrange(desc(H)) %>% 
-      mutate(hPoints = c(10:1)) %>% 
+      mutate(hPoints = c(11:1)) %>% 
       arrange(desc(HR)) %>% 
-      mutate(hrPoints = c(10:1)) %>% 
+      mutate(hrPoints = c(11:1)) %>% 
       arrange(desc(OBP)) %>% 
-      mutate(obpPoints = c(10:1)) %>% 
+      mutate(obpPoints = c(11:1)) %>% 
       arrange(desc(R)) %>% 
-      mutate(rPoints = c(10:1)) %>% 
+      mutate(rPoints = c(11:1)) %>% 
       arrange(desc(RBI)) %>% 
-      mutate(rbiPoints = c(10:1)) %>% 
+      mutate(rbiPoints = c(11:1)) %>% 
       arrange(desc(SB)) %>% 
-      mutate(sbPoints = c(10:1)) %>% 
+      mutate(sbPoints = c(11:1)) %>% 
       arrange(ERA) %>% 
-      mutate(eraPoints = c(10:1)) %>% 
+      mutate(eraPoints = c(11:1)) %>% 
       arrange(desc(K9)) %>% 
-      mutate(k9Points = c(10:1)) %>% 
+      mutate(k9Points = c(11:1)) %>% 
       arrange(desc(W)) %>% 
-      mutate(wPoints = c(10:1)) %>% 
+      mutate(wPoints = c(11:1)) %>% 
       arrange(desc(SV)) %>% 
-      mutate(svPoints = c(10:1)) %>% 
+      mutate(svPoints = c(11:1)) %>% 
       arrange(WHIP) %>% 
-      mutate(whipPoints = c(10:1)) %>%   
+      mutate(whipPoints = c(11:1)) %>%   
       mutate(totalPoints = hPoints + hrPoints + obpPoints + rPoints + rbiPoints + sbPoints + eraPoints + k9Points + wPoints +
                svPoints + whipPoints) %>% 
       select(teamDrafted, H, HR, OBP, R, RBI, SB, ERA, K9, W, SV, WHIP, Value, totalPoints) %>% 
@@ -509,13 +564,25 @@ server <- function(input, output, session) {
   output$downloadData <- downloadHandler(
     
     filename = function() {
-      paste("players_drafted", Sys.Date(), ".csv", sep="")
+      paste("all_players", Sys.Date(), ".csv", sep="")
     },
     
     content = function(file) {
       write.csv(rv$p, file)
     }
   )
+  
+  output$downloadTeamData <- downloadHandler(
+    filename = function() {
+      paste("players_drafted", Sys.Date(), ".csv", sep="")
+    },
+    
+    content = function(file) {
+      drafted <- filter(rv$p, !is.na(teamDrafted))
+      write.csv(drafted, file)
+    }
+  )
+  
   
   
 }
