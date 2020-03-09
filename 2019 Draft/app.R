@@ -7,21 +7,21 @@ library(scales)
 set.seed(2)
 
 # batters <- read_csv('2019 Draft/Steamer_B_600_feb.csv')    #read batters into data frame
-batters <- read_csv('Steamer_B_600_feb.csv')
+batters <- read_csv('../Steamer2020_batters.csv')
 batters <- batters %>% 
   filter(G > 25) %>%
   mutate(batterIndex = row_number()) %>% 
-  filter(batterIndex <= 400) %>% 
+  #filter(batterIndex <= 400) %>% 
   select(Name, H, HR, OBP, R, RBI, SB, AB, BB, HBP, PA, batterIndex)   #select columns needed
 
 # pitchers <- read_csv('2019 Draft/Steamer_P_600_feb.csv')
-pitchers <- read_csv('Steamer_P_600_feb.csv')
+pitchers <- read_csv('../Steamer2020_pitchers.csv')
 pitchers <- pitchers %>% 
   filter(G > 5) %>% 
   rename(H.pitcher = H) %>%
   rename(BB.pitcher = BB) %>%
   mutate(pitcherIndex = row_number()) %>% 
-  filter(pitcherIndex <= 200) %>% 
+  #filter(pitcherIndex <= 200) %>% 
   select(Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher, pitcherIndex)
 
 batterNames <- select(batters, Name)
@@ -75,7 +75,11 @@ ui <- dashboardPage(
         numericInput('price', "Auction Price:", value = 0.50, min = 0.50, step = 0.25),
         radioButtons('team', label = 'Team Drated', choices = teams),
         radioButtons('pos', label = 'Select Positon', choices = position),
-        actionButton('post', label = 'Post to Team')),
+        fluidRow(
+          actionButton('post', label = 'Post to Team'),
+          actionButton("addNew", label = "Add New Player")
+        )
+      ),
       tabBox(
         tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
         tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
@@ -157,6 +161,29 @@ server <- function(input, output, session) {
       mutate(positionDrafted = ifelse(is.na(positionDrafted) & Name == drafted_player(), 
                                       drafted_position(), positionDrafted))
     rv$p <- thedf
+  })
+  
+  observeEvent(input$addNew, {
+    showModal(
+      modalDialog(
+        title = 'Add New Player to List',
+        textInput('firstName', "Enter First Name"),
+        textInput('lastName', "Enter Last Name"),
+        textInput('pos', "Enter Position"),
+        easyClose = TRUE,
+        footer = tagList(
+          actionButton('add', "Add New Player to List"),
+          modalButton('Cancel')
+        )
+        )
+    )
+  })
+  
+  observeEvent(input$add, {
+    
+    newPlayer <- tibble()
+    
+    
   })
   
   
