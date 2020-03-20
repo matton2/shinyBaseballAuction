@@ -41,7 +41,7 @@ set.seed(1)
 # players$teamDrafted <- NA
 # players$auctionPrice <- NA
 # players$positionDrafted <- NA
-players <- read_csv('2019Keepers.csv')
+players <- read_csv('../downloadData.csv')
 arrange(players, Name)
 
 teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Marc', 'Pat', 'Brendan', 'David')
