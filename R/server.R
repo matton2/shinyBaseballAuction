@@ -1,140 +1,3 @@
-
-library(shiny)
-library(shinydashboard)
-library(plyr)
-library(tidyverse)
-library(scales)
-set.seed(2)
-
-batters <- read_csv('FanGraphs Leaderboard.csv')    #read batters into data frame
-batters <- batters %>% 
-  filter(G > 25) %>%
-  mutate(batterIndex = row_number()) %>% 
-  filter(batterIndex <= 400) %>% 
-  select(Name, H, HR, OBP, R, RBI, SB, AB, BB, HBP, PA, batterIndex)   #select columns needed
-
-pitchers <- read_csv('FanGraphs Leaderboard pitchers.csv')
-pitchers <- pitchers %>% 
-  filter(G > 5) %>% 
-  rename(H.pitcher = H) %>%
-  rename(BB.pitcher = BB) %>%
-  mutate(pitcherIndex = row_number()) %>% 
-  filter(pitcherIndex <= 200) %>% 
-  select(Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
-
-batterNames <- select(batters, Name)
-pitcherNames <- select(pitchers, Name)
-all_names <- rbind(batterNames, pitcherNames) %>% distinct()
-
-players <- full_join(all_names, batters, by = c("Name" = "Name"))
-players <- full_join(players, pitchers, by = c("Name" = "Name")) 
-
-batterAuction <- read_csv('battersAuctionValue.csv')
-batterAuction <- batterAuction %>% 
-  mutate(rowIndex = row_number()) %>% 
-  filter(rowIndex <= 400) %>% 
-  select(PlayerName, POS, Dollars) %>% 
-  separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
-  mutate(Dollars = as.numeric(Dollars)) %>% 
-  mutate(Dollars = ifelse(is.na(Dollars), 0.5, Dollars))
-
-pitcherAuction <- read_csv('pitcherAuctionValue.csv')
-pitcherAuction <- pitcherAuction %>% 
-  mutate(rowIndex = row_number()) %>% 
-  filter(rowIndex <= 300) %>% 
-  filter(!grepl('Rami', PlayerName)) %>% 
-  select(PlayerName, POS, Dollars) %>% 
-  separate(Dollars, into = c('symbol', 'Dollars'), sep="\\$") %>% 
-  mutate(Dollars = as.numeric(Dollars)) %>% 
-  mutate(Dollars = ifelse(is.na(Dollars), 0.5, Dollars)) 
-
-allAuction <- rbind(batterAuction, pitcherAuction)
-
-players <- left_join(players, allAuction, by = c('Name' = 'PlayerName')) %>% #changed from full to left
-  select(Name, POS, everything())
-players$teamDrafted <- NA
-players$auctionPrice <- NA
-players$positionDrafted <- NA
-arrange(players, Name)
-
-teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Ron', 'Marc', 'Pat', 'Brendan', 'David')
-position <- c('C', '1B', '2B', 'SS', '3B', 'CI', 'MI', 'OF', 'U', 'SP', 'RP')
-
-ui <- dashboardPage(
-  dashboardHeader(title = 'Fantasy Baseball 2018'),
-  dashboardSidebar(),
-  dashboardBody(
-    fluidRow(
-      box(
-        title = "Input Selection",
-        uiOutput('selectInput'),
-        numericInput('price', "Auction Price:", value = 0.50, min = 0.50, step = 0.25),
-        radioButtons('team', label = 'Team Drated', choices = teams),
-        radioButtons('pos', label = 'Select Positon', choices = position),
-        actionButton('post', label = 'Post to Team')),
-      tabBox(
-        tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
-        tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
-        tabPanel('Jay', textOutput('jayTitle'),tableOutput('jayTable'), textOutput('jayLine')),
-        tabPanel('Kid', textOutput('kidTitle'),tableOutput('kidTable'), textOutput('kidLine')),
-        tabPanel('Fish', textOutput('fishTitle'),tableOutput('fishTable'), textOutput('fishLine')),
-        tabPanel('Sherm', textOutput('shermTitle'),tableOutput('shermTable'), textOutput('shermLine')),
-        tabPanel('RonT', textOutput('ronTitle'),tableOutput('ronTable'), textOutput('ronLine')),
-        tabPanel('Marc', textOutput('marcTitle'),tableOutput('marcTable'), textOutput('marcLine')),
-        tabPanel('Pat', textOutput('patTitle'),tableOutput('patTable'), textOutput('patLine')),
-        tabPanel('Bren', textOutput('brenTitle'),tableOutput('brenTable'), textOutput('brenLine')),
-        tabPanel('David', textOutput('davidTitle'),tableOutput('davidTable'), textOutput('davidLine'))
-      )),
-    fluidRow(
-      tabBox(
-        tabPanel("TopBatter", tableOutput('topBatterTable')),
-        tabPanel('C', tableOutput('catcherTable')),
-        tabPanel('1B', tableOutput('firstTable')),
-        tabPanel('2B', tableOutput('secondTable')),
-        tabPanel('SS', tableOutput('ssTable')),
-        tabPanel('3B', tableOutput('thirdTable')),
-        tabPanel('OF', tableOutput('ofTable')),
-        tabPanel('MI', tableOutput('miTable')),
-        tabPanel('CI', tableOutput('ciTable')),
-        tabPanel('TopPitcher', tableOutput('topPitcherTable')),
-        tabPanel('SP', tableOutput('spTable')),
-        tabPanel('RP', tableOutput('rpTable'))
-      ),
-      tabBox(
-        tabPanel('H', tableOutput('hTable')),
-        tabPanel('HR', tableOutput('hrTable')),
-        tabPanel('OBP', tableOutput('obpTable')),
-        tabPanel('R', tableOutput('rTable')),
-        tabPanel("RBI", tableOutput('rbiTable')),
-        tabPanel('SB', tableOutput('sbTable')),
-        tabPanel('ERA', tableOutput('eraTable')),
-        tabPanel('K/9', tableOutput('k9Table')),
-        tabPanel('SV', tableOutput('svTable')),
-        tabPanel('W', tableOutput('wTable')),
-        tabPanel('WHIP', tableOutput('whipTable')),
-        tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
-      )
-    ),
-    fluidRow(
-      plotOutput('heat')
-    ),
-    fluidRow(
-      title = 'Compiled Team Stats:',
-      tableOutput('summaryTable')
-    ),
-    fluidRow(
-      downloadButton('downloadData', 'Download All Players'),
-      downloadButton('downloadTeamData', "Download Completed Rosters"),
-      box(
-        title = "Input Selection",
-        uiOutput('removeInput'),
-        actionButton('remove', label = 'Remove From Team'))
-    )
-  )
-)
-
-
-# Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
   drafted_player <- reactive({input$p_select})
@@ -206,11 +69,6 @@ server <- function(input, output, session) {
       select(Name, POS, H, HR, OBP, R, RBI, SB, batterIndex, ERA, `K/9`, SV, W, WHIP, pitcherIndex, Dollars)
   })
   
-  
-  outTitle <- function(teamName) {
-    print(paste0(teamName, "'s Drafted Team"))
-  }
-  
   output$adamTitle <- renderText({
     outTitle('Adam')
   })
@@ -245,102 +103,75 @@ server <- function(input, output, session) {
     outTitle('David')
   })
   
-  outTable <- function(teamName) {
-    rv$p %>% 
-      filter(teamDrafted == teamName) %>% 
-      mutate(value = Dollars - auctionPrice, na.rm= TRUE) %>% 
-      select(Name, positionDrafted, auctionPrice, value) %>% 
-      mutate(positionDrafted = factor(positionDrafted, levels = position)) %>% 
-      arrange(positionDrafted)
-  }
-  
   output$adamTable <- renderTable({
-    outTable('Adam')
+    outTable(rv$p,'Adam')
   })
   output$mattTable <- renderTable({
-    outTable('Matt')
+    outTable(rv$p,'Matt')
   })
   output$jayTable <- renderTable({
-    outTable('Jay')
+    outTable(rv$p,'Jay')
   })
   output$fishTable <- renderTable({
-    outTable('Fish')
+    outTable(rv$p,'Fish')
   })
   output$kidTable <- renderTable({
-    outTable('Kid')
+    outTable(rv$p,'Kid')
   })
   output$shermTable <- renderTable({
-    outTable('Sherm')
+    outTable(rv$p,'Sherm')
   })
   output$ronTable <- renderTable({
-    outTable('Ron')
+    outTable(rv$p,'Ron')
   })
   output$marcTable <- renderTable({
-    outTable('Marc')
+    outTable(rv$p,'Marc')
   })
   output$patTable <- renderTable({
-    outTable('Pat')
+    outTable(rv$p,'Pat')
   })
   output$brenTable <- renderTable({
-    outTable('Brendan')
+    outTable(rv$p,'Brendan')
   })
   output$davidTable <- renderTable({
-    outTable('David')
+    outTable(rv$p,'David')
   })
-  
-  
-  outLine <- function(teamName) {
-    drafted <- rv$p %>% 
-      filter(teamDrafted == teamName) %>% 
-      nrow()
-    left <- 16 - drafted
-    
-    salary <- rv$p %>% 
-      filter(teamDrafted == teamName) %>% 
-      summarize(sum(auctionPrice))
-    
-    salaryLeft = 63 - salary
-    
-    maxBid = salaryLeft - ((left-1) *0.5)
-    
-    print(paste0("Total Remaing Player: ", left, "\n. Total Remaing Salary: ", salaryLeft, "\n. Max Bid Left: ", maxBid))
-  }
   
   output$mattLine <- renderText({
-    outLine('Matt')
+    outLine(rv$p, 'Matt')
   })
   output$adamLine <- renderText({
-    outLine('Adam')
+    outLine(rv$p,'Adam')
   })
   output$jayLine <- renderText({
-    outLine("Jay")
+    outLine(rv$p,"Jay")
   })
   output$fishLine <- renderText({
-    outLine("Fish")
+    outLine(rv$p,"Fish")
   })
   output$kidLine <- renderText({
-    outLine('Kid')
+    outLine(rv$p,'Kid')
   })
   output$shermLine <- renderText({
-    outLine('Sherm')
+    outLine(rv$p,'Sherm')
   })
   output$ronLine <- renderText({
-    outLine("Ron")
+    outLine(rv$p,"Ron")
   })
   output$marcLine <- renderText({
-    outLine('Marc')
+    outLine(rv$p,'Marc')
   })
   output$patLine <- renderText({
-    outLine('Pat')
+    outLine(rv$p,'Pat')
   })
   output$brenLine <- renderText({
-    outLine('Brendan')
+    outLine(rv$p, 'Brendan')
   })
   output$davidLine <- renderText({
-    outLine('David')
+    outLine(rv$p,'David')
   })
   
- 
+  
   
   output$topBatterTable <- renderTable({
     rv$p %>% 
@@ -434,53 +265,35 @@ server <- function(input, output, session) {
       head()
   })
   
-  positionBatterTable <- function(pos){
-    rv$p %>% 
-      filter(is.na(teamDrafted)) %>% 
-      filter(grepl(pos,POS)) %>%
-      arrange(batterIndex) %>% 
-      select(Name, POS, H, HR, OBP, R, RBI, SB, Dollars, batterIndex) %>% 
-      head(n=10)
-  }
-  
-  positionPitcherTable <- function(pos){
-    rv$p %>% 
-      filter(is.na(teamDrafted)) %>% 
-      filter(grepl(pos,POS)) %>%
-      arrange(pitcherIndex) %>% 
-      select(Name, POS, ERA, `K/9`, SV, W, WHIP, Dollars, pitcherIndex) %>% 
-      head(n=10)
-  }
-  
   output$catcherTable <- renderTable({
-    positionBatterTable("C")
+    positionBatterTable(rv$p, "C")
   })
   output$firstTable <- renderTable ({
-    positionBatterTable("1B")
+    positionBatterTable(rv$p,"1B")
   })
   output$secondTable <- renderTable ({
-    positionBatterTable("2B")
+    positionBatterTable(rv$p,"2B")
   })
   output$ssTable <- renderTable ({
-    positionBatterTable("SS")
+    positionBatterTable(rv$p,"SS")
   })
   output$thirdTable <- renderTable ({
-    positionBatterTable("3B")
+    positionBatterTable(rv$p,"3B")
   })
   output$ofTable <- renderTable ({
-    positionBatterTable("OF")
+    positionBatterTable(rv$p,"OF")
   })
   output$miTable <- renderTable ({
-    positionBatterTable("2B|SS")
+    positionBatterTable(rv$p,"2B|SS")
   })
   output$ciTable <- renderTable({
-    positionBatterTable('1B|3B')
+    positionBatterTable(rv$p,'1B|3B')
   })
   output$spTable <- renderTable({
-    positionPitcherTable("SP")
+    positionPitcherTable(rv$p,"SP")
   })
   output$rpTable <- renderTable({
-    positionPitcherTable('RP')
+    positionPitcherTable(rv$p,'RP')
   })
   
   output$heat <- renderPlot({
@@ -509,7 +322,7 @@ server <- function(input, output, session) {
       labs(x = "", y = "") + 
       scale_x_discrete(expand = c(0, 0)) +
       scale_y_discrete(expand = c(0, 0))
-      
+    
     
   })
   
@@ -553,7 +366,7 @@ server <- function(input, output, session) {
       arrange(WHIP) %>% 
       mutate(whipPoints = c(11:1)) %>%   
       mutate(totalPoints = hPoints + hrPoints + obpPoints + rPoints + rbiPoints + sbPoints + eraPoints + k9Points + wPoints +
-                                  svPoints + whipPoints) %>% 
+               svPoints + whipPoints) %>% 
       select(teamDrafted, H, HR, OBP, R, RBI, SB, ERA, K9, W, SV, WHIP, Value, totalPoints) %>% 
       arrange(desc(totalPoints))
   })
@@ -584,9 +397,6 @@ server <- function(input, output, session) {
   )
   
   
-    
+  
 }
-
-
-shinyApp(ui = ui, server = server)
 
