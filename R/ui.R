@@ -2,8 +2,11 @@
 ui <- navbarPage(
   title = 'Fantasy Baseball 2021',
   tabPanel("Draft",
+           tags$head(
+             tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+           ),
            fluidRow(
-             column(6,
+             column(2, id = 'dashed',
                     title = "Input Selection",
                     uiOutput('selectInput'),
                     numericInput('price', "Auction Price:", value = 0.50, min = 0.50, step = 0.25),
@@ -15,11 +18,13 @@ ui <- navbarPage(
                     ),
                     fluidRow(
                       column(3),
-                      column(4,actionButton('post', label = 'Post to Team')),
+                      column(4,actionButton('post', label = 'Post to Team'),
+                             br()),
                       column(5)
                     )
              ),
-             column(6, 
+             column(1),
+             column(9, id = 'dashed',
                     tabBox(
                       tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
                       tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
