@@ -23,8 +23,7 @@ ui <- navbarPage(
                       column(5)
                     )
              ),
-             column(1),
-             column(9, id = 'dashed',
+             column(10, id = 'dashed',
                     tabBox(
                       tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
                       tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
