@@ -6,7 +6,7 @@ server <- function(input, output, session) {
   drafted_position <- reactive({input$pos})
   
   
-  rv <- reactiveValues(p = players)
+  rv <- reactiveValues(p = players, ofInterest = tibble())
   
   observeEvent(input$post, {
     thedf <- rv$p %>% 
@@ -17,6 +17,23 @@ server <- function(input, output, session) {
       mutate(positionDrafted = ifelse(is.na(positionDrafted) & Name == drafted_player(), 
                                       drafted_position(), positionDrafted))
     rv$p <- thedf
+  })
+  
+  observeEvent(input$keepForLater, {
+    
+    rv$ofInterest <- rv$ofInterest %>% 
+      bind_rows(., filter(rv$p, Name == drafted_player()))
+    
+  })
+  
+  observeEvent(input$clearInterest, {
+    
+    tempP <- rv$p %>% 
+      filter(is.na(teamDrafted))
+    
+    rv$ofInterest <- rv$ofInterest %>% 
+      filter(Name %in% tempP$Name)
+    
   })
   
   
@@ -294,6 +311,10 @@ server <- function(input, output, session) {
   })
   output$rpTable <- renderTable({
     positionPitcherTable(rv$p,'RP')
+  })
+  
+  output$ofInterest <- renderTable({
+    rv$ofInterest
   })
   
   output$heat <- renderPlot({

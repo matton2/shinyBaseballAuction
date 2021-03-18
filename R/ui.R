@@ -16,48 +16,14 @@ ui <- navbarPage(
                       column(6, 
                              radioButtons('pos', label = 'Select Positon', choices = position))
                     ),
+                    br(),
                     fluidRow(
-                      column(3),
-                      column(4,actionButton('post', label = 'Post to Team'),
-                             br()),
-                      column(5)
+                      column(6,actionButton('keepForLater', "Keep")),
+                      column(6,actionButton('post', label = 'Post'))
                     )
              ),
-             column(5,
-                    tabBox(
-                      tabPanel("TopBatter", tableOutput('topBatterTable')),
-                      tabPanel('C', tableOutput('catcherTable')),
-                      tabPanel('1B', tableOutput('firstTable')),
-                      tabPanel('2B', tableOutput('secondTable')),
-                      tabPanel('SS', tableOutput('ssTable')),
-                      tabPanel('3B', tableOutput('thirdTable')),
-                      tabPanel('OF', tableOutput('ofTable')),
-                      tabPanel('MI', tableOutput('miTable')),
-                      tabPanel('CI', tableOutput('ciTable')),
-                      tabPanel('TopPitcher', tableOutput('topPitcherTable')),
-                      tabPanel('SP', tableOutput('spTable')),
-                      tabPanel('RP', tableOutput('rpTable'))
-                    )
-                    ),
-             column(5,
-                    tabBox(
-                      tabPanel('H', tableOutput('hTable')),
-                      tabPanel('HR', tableOutput('hrTable')),
-                      tabPanel('OBP', tableOutput('obpTable')),
-                      tabPanel('R', tableOutput('rTable')),
-                      tabPanel("RBI", tableOutput('rbiTable')),
-                      tabPanel('SB', tableOutput('sbTable')),
-                      tabPanel('ERA', tableOutput('eraTable')),
-                      tabPanel('K/9', tableOutput('k9Table')),
-                      tabPanel('SV', tableOutput('svTable')),
-                      tabPanel('W', tableOutput('wTable')),
-                      tabPanel('WHIP', tableOutput('whipTable')),
-                      tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
-                    ))
-           ),
-           fluidRow(
-             column(12, id = 'dashed',
-                    tabBox(
+             column(10, id = 'dashed',
+                    tabsetPanel(
                       tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
                       tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
                       tabPanel('Jay', textOutput('jayTitle'),tableOutput('jayTable'), textOutput('jayLine')),
@@ -71,6 +37,43 @@ ui <- navbarPage(
                       tabPanel('David', textOutput('davidTitle'),tableOutput('davidTable'), textOutput('davidLine'))
                     )
              )
+           ),
+           br(),
+           hr(),
+           br(),
+           fluidRow(
+             column(6,
+                    tabsetPanel(
+                      tabPanel("TopBatter", tableOutput('topBatterTable')),
+                      tabPanel('C', tableOutput('catcherTable')),
+                      tabPanel('1B', tableOutput('firstTable')),
+                      tabPanel('2B', tableOutput('secondTable')),
+                      tabPanel('SS', tableOutput('ssTable')),
+                      tabPanel('3B', tableOutput('thirdTable')),
+                      tabPanel('OF', tableOutput('ofTable')),
+                      tabPanel('MI', tableOutput('miTable')),
+                      tabPanel('CI', tableOutput('ciTable')),
+                      tabPanel('TopPitcher', tableOutput('topPitcherTable')),
+                      tabPanel('SP', tableOutput('spTable')),
+                      tabPanel('RP', tableOutput('rpTable'))
+                    )
+             ),
+             column(6,
+                    tabsetPanel(
+                      tabPanel('H', tableOutput('hTable')),
+                      tabPanel('HR', tableOutput('hrTable')),
+                      tabPanel('OBP', tableOutput('obpTable')),
+                      tabPanel('R', tableOutput('rTable')),
+                      tabPanel("RBI", tableOutput('rbiTable')),
+                      tabPanel('SB', tableOutput('sbTable')),
+                      tabPanel('ERA', tableOutput('eraTable')),
+                      tabPanel('K/9', tableOutput('k9Table')),
+                      tabPanel('SV', tableOutput('svTable')),
+                      tabPanel('W', tableOutput('wTable')),
+                      tabPanel('WHIP', tableOutput('whipTable')),
+                      tabPanel('Interesting', tableOutput("ofInterest"), actionButton('clearInterest', "Clear List")),
+                      tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
+                    ))
            ),
            br(),
            hr(),
