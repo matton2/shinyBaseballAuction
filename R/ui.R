@@ -23,7 +23,40 @@ ui <- navbarPage(
                       column(5)
                     )
              ),
-             column(10, id = 'dashed',
+             column(5,
+                    tabBox(
+                      tabPanel("TopBatter", tableOutput('topBatterTable')),
+                      tabPanel('C', tableOutput('catcherTable')),
+                      tabPanel('1B', tableOutput('firstTable')),
+                      tabPanel('2B', tableOutput('secondTable')),
+                      tabPanel('SS', tableOutput('ssTable')),
+                      tabPanel('3B', tableOutput('thirdTable')),
+                      tabPanel('OF', tableOutput('ofTable')),
+                      tabPanel('MI', tableOutput('miTable')),
+                      tabPanel('CI', tableOutput('ciTable')),
+                      tabPanel('TopPitcher', tableOutput('topPitcherTable')),
+                      tabPanel('SP', tableOutput('spTable')),
+                      tabPanel('RP', tableOutput('rpTable'))
+                    )
+                    ),
+             column(5,
+                    tabBox(
+                      tabPanel('H', tableOutput('hTable')),
+                      tabPanel('HR', tableOutput('hrTable')),
+                      tabPanel('OBP', tableOutput('obpTable')),
+                      tabPanel('R', tableOutput('rTable')),
+                      tabPanel("RBI", tableOutput('rbiTable')),
+                      tabPanel('SB', tableOutput('sbTable')),
+                      tabPanel('ERA', tableOutput('eraTable')),
+                      tabPanel('K/9', tableOutput('k9Table')),
+                      tabPanel('SV', tableOutput('svTable')),
+                      tabPanel('W', tableOutput('wTable')),
+                      tabPanel('WHIP', tableOutput('whipTable')),
+                      tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
+                    ))
+           ),
+           fluidRow(
+             column(12, id = 'dashed',
                     tabBox(
                       tabPanel('Adam', textOutput('adamTitle'),tableOutput('adamTable'), textOutput('adamLine')),
                       tabPanel('Matt', textOutput('mattTitle'),tableOutput('mattTable'), textOutput('mattLine')),
@@ -43,41 +76,11 @@ ui <- navbarPage(
            hr(),
            br(),
            fluidRow(
-             tabBox(
-               tabPanel("TopBatter", tableOutput('topBatterTable')),
-               tabPanel('C', tableOutput('catcherTable')),
-               tabPanel('1B', tableOutput('firstTable')),
-               tabPanel('2B', tableOutput('secondTable')),
-               tabPanel('SS', tableOutput('ssTable')),
-               tabPanel('3B', tableOutput('thirdTable')),
-               tabPanel('OF', tableOutput('ofTable')),
-               tabPanel('MI', tableOutput('miTable')),
-               tabPanel('CI', tableOutput('ciTable')),
-               tabPanel('TopPitcher', tableOutput('topPitcherTable')),
-               tabPanel('SP', tableOutput('spTable')),
-               tabPanel('RP', tableOutput('rpTable'))
-             ),
-             tabBox(
-               tabPanel('H', tableOutput('hTable')),
-               tabPanel('HR', tableOutput('hrTable')),
-               tabPanel('OBP', tableOutput('obpTable')),
-               tabPanel('R', tableOutput('rTable')),
-               tabPanel("RBI", tableOutput('rbiTable')),
-               tabPanel('SB', tableOutput('sbTable')),
-               tabPanel('ERA', tableOutput('eraTable')),
-               tabPanel('K/9', tableOutput('k9Table')),
-               tabPanel('SV', tableOutput('svTable')),
-               tabPanel('W', tableOutput('wTable')),
-               tabPanel('WHIP', tableOutput('whipTable')),
-               tabPanel('Search', uiOutput('searchInput'), tableOutput('playerTable'))
-             )
+             title = 'Compiled Team Stats:',
+             tableOutput('summaryTable')
            ),
            fluidRow(
              plotOutput('heat')
-           ),
-           fluidRow(
-             title = 'Compiled Team Stats:',
-             tableOutput('summaryTable')
            ),
            fluidRow(
              downloadButton('downloadData', 'Download All Players'),

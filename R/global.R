@@ -13,7 +13,7 @@ pitchers <- pitchers %>%
   rename(BB.pitcher = BB) %>%
   mutate(pitcherIndex = row_number()) %>% 
   filter(pitcherIndex <= 200) %>% 
-  select(Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
+  select(pitcherIndex, Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
 
 batterNames <- select(batters, Name)
 pitcherNames <- select(pitchers, Name)
