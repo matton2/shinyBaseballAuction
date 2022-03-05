@@ -15,6 +15,9 @@ pitchers <- pitchers %>%
   filter(pitcherIndex <= 200) %>% 
   select(pitcherIndex, Name, ERA, `K/9`, SV, W, WHIP, IP, ER, H.pitcher, SO, BB.pitcher)
 
+# TODO: figure out how to handle players with the same name
+# TODO: keep all players
+
 batterNames <- select(batters, Name)
 pitcherNames <- select(pitchers, Name)
 all_names <- rbind(batterNames, pitcherNames) %>% distinct()
@@ -50,5 +53,5 @@ players$auctionPrice <- NA
 players$positionDrafted <- NA
 arrange(players, Name)
 
-teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Ron', 'Marc', 'Pat', 'Brendan', 'David')
+teams <- c('Fish', 'Matt', 'Jay', 'Kid', 'Adam', 'Sherm', 'Marc', 'Pat', 'Brendan', 'David')
 position <- c('C', '1B', '2B', 'SS', '3B', 'CI', 'MI', 'OF', 'U', 'SP', 'RP')

@@ -30,7 +30,6 @@ ui <- navbarPage(
                       tabPanel('Kid', textOutput('kidTitle'),tableOutput('kidTable'), textOutput('kidLine')),
                       tabPanel('Fish', textOutput('fishTitle'),tableOutput('fishTable'), textOutput('fishLine')),
                       tabPanel('Sherm', textOutput('shermTitle'),tableOutput('shermTable'), textOutput('shermLine')),
-                      tabPanel('RonT', textOutput('ronTitle'),tableOutput('ronTable'), textOutput('ronLine')),
                       tabPanel('Marc', textOutput('marcTitle'),tableOutput('marcTable'), textOutput('marcLine')),
                       tabPanel('Pat', textOutput('patTitle'),tableOutput('patTable'), textOutput('patLine')),
                       tabPanel('Bren', textOutput('brenTitle'),tableOutput('brenTable'), textOutput('brenLine')),

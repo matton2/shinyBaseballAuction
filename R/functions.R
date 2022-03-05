@@ -16,13 +16,13 @@ outLine <- function(data, teamName) {
   drafted <- data %>% 
     filter(teamDrafted == teamName) %>% 
     nrow()
-  left <- 16 - drafted
+  left <- 20 - drafted
   
   salary <- data %>% 
     filter(teamDrafted == teamName) %>% 
     summarize(sum(auctionPrice))
   
-  salaryLeft = 63 - salary
+  salaryLeft = 60 - salary
   
   maxBid = salaryLeft - ((left-1) *0.5)
   
